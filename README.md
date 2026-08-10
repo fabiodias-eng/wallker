@@ -27,3 +27,11 @@ bash uninstall.sh
 
 ## Dependencies
 The only dependency is [feh](https://github.com/derf/feh), which is installed automatically by `install.sh`
+
+## Checking status
+
+```bash
+systemctl --user status wallker.timer
+systemctl --user status wallker.service
+systemctl --user list-timers wallker.timer
+```
