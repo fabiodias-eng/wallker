@@ -4,6 +4,8 @@ Wallker is a simple Linux wallpaper changer that randomly rotates wallpapers at 
 
 ## How to install
 ```bash
+git clone https://github.com/fabiodias-eng/wallker.git
+cd wallker
 bash install.sh
 ```
 ## Usage
