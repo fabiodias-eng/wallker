@@ -1,0 +1,12 @@
+*
+
+!.gitignore
+!LICENSE
+!README.md
+
+!install.sh
+!uninstall.sh
+!wallker
+
+!wallpapers/
+!wallpapers/**

@@ -1,0 +1,118 @@
+#!/bin/bash
+set -u
+
+CONFIG="$HOME/.config/wallker/wallker-config"
+
+WALLPAPER_DIR=""
+WALLPAPER_TIMER=""
+
+CONFIG_CHANGED=false
+TIMER_CHANGED=false
+
+save_config() {
+    cat >"$CONFIG" <<EOF
+WALLPAPER_DIR="$WALLPAPER_DIR"
+WALLPAPER_TIMER="$WALLPAPER_TIMER"
+EOF
+}
+
+update_timer() {
+    local systemd_user_dir="$HOME/.config/systemd/user"
+
+    cat >"$systemd_user_dir/wallker.timer" <<EOF
+[Unit]
+Description=Wallker: Wallpaper rotation timer
+
+[Timer]
+OnBootSec=$WALLPAPER_TIMER
+OnUnitActiveSec=$WALLPAPER_TIMER
+AccuracySec=1s
+Unit=wallker.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user restart wallker.timer
+}
+
+set_wallpaper() {
+    feh --randomize --bg-fill "$WALLPAPER_DIR"
+}
+
+show_help() {
+    echo 'Usage:
+wallker [OPTIONS]
+
+Options:
+-t, --timer TIME     Set wallpaper rotation interval
+-d, --dir DIR        Set wallpaper directory
+-h, --help           Show this help
+
+Examples:
+wallker --timer 5m
+wallker --dir ~/Pictures/Wallpapers
+'
+}
+
+# Read configuration
+source "$CONFIG"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+
+    -t | --timer)
+        if [[ -z "${2:-}" ]]; then
+            echo "Error: --timer requires an argument."
+            exit 1
+        fi
+
+        WALLPAPER_TIMER="$2"
+        CONFIG_CHANGED=true
+        TIMER_CHANGED=true
+        shift 2
+        ;;
+
+    -d | --dir)
+        if [[ -z "${2:-}" ]]; then
+            echo "Error: --dir requires an argument."
+            exit 1
+        fi
+
+        WALLPAPER_DIR="$2"
+        CONFIG_CHANGED=true
+        shift 2
+        ;;
+
+    -h | --help)
+        show_help
+        exit 0
+        ;;
+
+    -*)
+        echo "Error: unknown option: $1"
+        echo "Try 'wallker --help' for more information."
+        exit 1
+        ;;
+
+    *)
+        echo "Error: unexpected argument: $1"
+        exit 1
+        ;;
+
+    esac
+done
+
+# Apply configuration changes
+if [[ "$CONFIG_CHANGED" == true ]]; then
+    save_config
+fi
+
+if [[ "$TIMER_CHANGED" == true ]]; then
+    update_timer
+fi
+
+# Change wallpaper
+set_wallpaper
